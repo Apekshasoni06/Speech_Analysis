@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech to Text and Sentiment Analysis</title>
+</head>
+<body>
+    <h1>Speech to Text and Sentiment Analysis</h1>
+    
+    <form id="uploadForm">
+        <label for="audioFile">Select an audio file:</label>
+        <input type="file" id="audioFile" accept=".mp3" />
+        <button type="button" onclick="processFile()">Process File</button>
+    </form>
+
+    <div id="speechToTextResult">
+        <h2>Speech-to-Text Result:</h2>
+        <pre id="speechResult"></pre>
+    </div>
+
+    <div id="sentimentAnalysisResult">
+        <h2>Sentiment Analysis Result:</h2>
+        <pre id="sentimentResult"></pre>
+    </div>
+
+    <script>
+        async function processFile() {
+            const fileInput = document.getElementById('audioFile');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const formData = new FormData();
+                formData.append('audio', file);
+
+                try {
+                    const speechToTextResult = await querySpeechToText(formData);
+                    const text = speechToTextResult.text.trim();
+
+                    const sentimentAnalysisResult = await querySentimentAnalysis(text);
+
+                    // Display results on the browser
+                    document.getElementById('speechResult').innerText = JSON.stringify(speechToTextResult, null, 2);
+                    document.getElementById('sentimentResult').innerText = JSON.stringify(sentimentAnalysisResult, null, 2);
+                } catch (error) {
+                    console.error("Error:", error);
+                }
+            } else {
+                alert("Please select an audio file.");
+            }
+        }
+
+        async function querySpeechToText(formData) {
+            const response = await fetch(
+                "https://api-inference.huggingface.co/models/Baghdad99/saad-speech-recognition-hausa-audio-to-text",
+                {
+                    headers: { Authorization: "Bearer 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" },
+                    method: "POST",
+                    body: formData,
+                }
+            );
+            return await response.json();
+        }
+
+        async function querySentimentAnalysis(text) {
+            const response = await fetch(
+                "https://api-inference.huggingface.co/models/arpanghoshal/EmoRoBERTa",
+                {
+                    headers: { Authorization: "Bearer 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" },
+                    method: "POST",
+                    body: JSON.stringify({ text: text }),
+                }
+            );
+            return await response.json();
+        }
+    </script>
+</body>
+</html>
